@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const caseSchema = require('./caseSchema.js')
 
 //--- Origin whitelisting for the Angular app on port 4200 ---/
+
 var originsWhitelist = [
     'http://localhost:4200'
 ];
@@ -25,6 +26,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 
 //--- Testing and app init ---/
+
 app.listen(3000, function () {
     console.log('listening on 3000');
 })
@@ -42,6 +44,7 @@ app.post('/', function (req, res) {
 //--- End of Testing and app init ---/
 
 //--- Controller methods implementations ---/
+
 const connectionString = 'mongodb+srv://root:1234@cluster0-9qy9w.mongodb.net/dashboard?retryWrites=true&w=majority';
 const Cases = mongoose.model('cases', caseSchema, 'cases');
 
@@ -87,31 +90,15 @@ async function findCasesByDistrict(id) {
     return await Cases.find({ 'location.district': id });
 }
 
+async function findCaseByID(id) {
+    return await Cases.find({ '_id': id });
+}
+
 //--- End of Controller method implementations ---/
 
 //--- API implementations ---/
 
 const connector = mongoose.connect(connectionString, { useUnifiedTopology: true, useNewUrlParser: true });
-
-app.get('/user', async function (req, res) {
-    let user = await connector.then(async () => {
-        console.log("DB connected");
-        return findCase("western");
-    });
-    res.send(user);
-})
-
-app.post('/user', async function (req, res) {
-    await connector.then(async () => {
-        console.log("DB connected");
-        createCase("Weimer Stein");
-    });
-    res.send("user created");
-})
-
-//--- End of API implementations ---/
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
 
 app.post('/create-case', async function (req, res) {
     await connector.then(async () => {
@@ -135,9 +122,17 @@ app.get('/numbers-by-district', async function (req, res) {
 })
 
 app.get('/cases-by-district', async function (req, res) {
-    console.log("Req body : " + JSON.stringify(req.query));
     let cases = await connector.then(async () => {
         return findCasesByDistrict(req.query["_id"]);
     });
     res.send(cases);
 })
+
+app.get('/case-by-id', async function (req, res) {
+    let singleCase = await connector.then(async () => {
+        return findCaseByID(req.query["_id"]);
+    });
+    res.send(singleCase);
+})
+
+//--- End of API implementations ---/
