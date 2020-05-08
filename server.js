@@ -5,7 +5,7 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const caseSchema = require('./caseSchema.js')
 
-//--- Origin whitelisting for the Angular app on port 4200 ---/
+//--- Origin whitelisting for the Angular app running on port 4200 ---/
 
 var originsWhitelist = [
     'http://localhost:4200'
@@ -132,7 +132,7 @@ app.get('/case-by-id', async function (req, res) {
     let singleCase = await connector.then(async () => {
         return findCaseByID(req.query["_id"]);
     });
-    res.send(singleCase);
+    res.send(singleCase[0]);
 })
 
 //--- End of API implementations ---/
