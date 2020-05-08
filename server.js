@@ -83,6 +83,10 @@ async function findNumbersByDistrict() {
     ]);
 }
 
+async function findCasesByDistrict(id) {
+    return await Cases.find({ 'location.district': id });
+}
+
 //--- End of Controller method implementations ---/
 
 //--- API implementations ---/
@@ -128,4 +132,12 @@ app.get('/numbers-by-district', async function (req, res) {
         return findNumbersByDistrict();
     });
     res.send(numbers[0]);
+})
+
+app.get('/cases-by-district', async function (req, res) {
+    console.log("Req body : " + JSON.stringify(req.query));
+    let cases = await connector.then(async () => {
+        return findCasesByDistrict(req.query["_id"]);
+    });
+    res.send(cases);
 })
