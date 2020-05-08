@@ -48,27 +48,6 @@ app.post('/', function (req, res) {
 const connectionString = 'mongodb+srv://root:1234@cluster0-9qy9w.mongodb.net/dashboard?retryWrites=true&w=majority';
 const Cases = mongoose.model('cases', caseSchema, 'cases');
 
-// async function createCase(name) {
-//     return new Cases({
-//         name,
-//         created: Date.now(),
-//         status,
-//         location: {
-//             district: "colombo",
-//             address: "boralesgamuwa"
-//         }
-//     }).save()
-// }
-
-// async function findCase(name = null) {
-//     let location = {
-//         province: "western",
-//         district: "colombo"
-//     }
-//     // return await Cases.find({ location });
-//     return await Cases.find({ 'location.province': 'western' });
-// }
-
 async function createCase(newCase) {
     newCase["created"] = Date.now();
     return new Cases(newCase).save();
@@ -104,7 +83,7 @@ app.post('/create-case', async function (req, res) {
     await connector.then(async () => {
         createCase(req.body);
     });
-    res.send("user created");
+    res.send("case created");
 })
 
 app.get('/all-cases', async function (req, res) {
