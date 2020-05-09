@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const caseSchema = new mongoose.Schema({
     name: {
         type: String,
-        required: [true, 'Username is required']
+        required: [true, 'Name is required']
     },
     age: {
         type: Number,

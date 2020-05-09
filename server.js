@@ -83,7 +83,7 @@ app.post('/create-case', async function (req, res) {
     await connector.then(async () => {
         createCase(req.body);
     });
-    res.send("case created");
+    res.send({"message": "case created"});
 })
 
 app.get('/all-cases', async function (req, res) {
