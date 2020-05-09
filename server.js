@@ -53,7 +53,11 @@ async function createCase(newCase) {
     return new Cases(newCase).save();
 }
 
-async function findAllCase() {
+async function removeCase(id) {
+    return await Cases.findOneAndDelete({ '_id': id });
+}
+
+async function findAllCases() {
     return await Cases.find();
 }
 
@@ -86,9 +90,16 @@ app.post('/create-case', async function (req, res) {
     res.send({"message": "case created"});
 })
 
+app.get('/remove-case', async function (req, res) {
+    await connector.then(async () => {
+        return removeCase(req.query["_id"]);
+    });
+    res.send({"message": "case removed"});
+})
+
 app.get('/all-cases', async function (req, res) {
     let cases = await connector.then(async () => {
-        return findAllCase();
+        return findAllCases();
     });
     res.send(cases);
 })
