@@ -53,6 +53,12 @@ async function createCase(newCase) {
     return new Cases(newCase).save();
 }
 
+async function editCase(caseData) {
+    const casaeID = caseData["_id"];
+    delete caseData["_id"];
+    return await Cases.findByIdAndUpdate({ '_id': casaeID }, caseData);
+}
+
 async function removeCase(id) {
     return await Cases.findOneAndDelete({ '_id': id });
 }
@@ -81,20 +87,27 @@ async function findCaseByID(id) {
 
 //--- API implementations ---/
 
-const connector = mongoose.connect(connectionString, { useUnifiedTopology: true, useNewUrlParser: true });
+const connector = mongoose.connect(connectionString, { useUnifiedTopology: true, useNewUrlParser: true, useFindAndModify: false });
 
 app.post('/create-case', async function (req, res) {
     await connector.then(async () => {
         createCase(req.body);
     });
-    res.send({"message": "case created"});
+    res.send({"message": "Case created"});
+})
+
+app.post('/edit-case', async function (req, res) {
+    await connector.then(async () => {
+        editCase(req.body);
+    });
+    res.send({"message": "Case edited"});
 })
 
 app.get('/remove-case', async function (req, res) {
     await connector.then(async () => {
         return removeCase(req.query["_id"]);
     });
-    res.send({"message": "case removed"});
+    res.send({"message": "Case removed"});
 })
 
 app.get('/all-cases', async function (req, res) {
