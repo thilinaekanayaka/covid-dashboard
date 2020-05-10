@@ -49,6 +49,13 @@ const connectionString = 'mongodb+srv://root:1234@cluster0-9qy9w.mongodb.net/das
 const Cases = mongoose.model('cases', caseSchema, 'cases');
 const connector = mongoose.connect(connectionString, { useUnifiedTopology: true, useNewUrlParser: true, useFindAndModify: false });
 
+const AUTH_TOKEN = "heXdXxRU33TrW24S";
+
+function authenticate(auth_token) {
+    if (auth_token == AUTH_TOKEN) return true;
+    else return false;
+}
+
 async function createCase(newCase, res) {
     newCase["created"] = Date.now();
     return new Cases(newCase).save(function (err) {
@@ -113,67 +120,102 @@ async function findCaseByID(id) {
 //--- API implementations ---/
 
 app.post('/create-case', async function (req, res) {
-    await connector.then(async () => {
-        createCase(req.body, res);
-    });
+    if (authenticate(req.headers["auth_token"])) {
+        await connector.then(async () => {
+            createCase(req.body, res);
+        });
+    } else {
+        res.status(403);
+        res.send({ "message": "Invalid Auth Token" });
+    }
 })
 
 app.post('/edit-case', async function (req, res) {
-    await connector.then(async () => {
-        editCase(req.body, res);
-    });
+    if (authenticate(req.headers["auth_token"])) {
+        await connector.then(async () => {
+            editCase(req.body, res);
+        });
+    } else {
+        res.status(403);
+        res.send({ "message": "Invalid Auth Token" });
+    }
 })
 
 app.get('/remove-case', async function (req, res) {
-    if (req.query["_id"]) {
-        await connector.then(async () => {
-            return removeCase(req.query["_id"]);
-        });
-        res.status(200);
-        res.send({ "message": "Case removed" });
+    if (authenticate(req.headers["auth_token"])) {
+        if (req.query["_id"]) {
+            await connector.then(async () => {
+                return removeCase(req.query["_id"]);
+            });
+            res.status(200);
+            res.send({ "message": "Case removed" });
+        } else {
+            res.status(400);
+            res.send({ "message": "Case ID is required" });
+        }
     } else {
-        res.status(400);
-        res.send({ "message": "Case ID is required" });
+        res.status(403);
+        res.send({ "message": "Invalid Auth Token" });
     }
 })
 
 app.get('/all-cases', async function (req, res) {
-    res.status(200);
-    res.send(await connector.then(async () => {
-        return findAllCases();
-    }));
+    if (authenticate(req.headers["auth_token"])) {
+        res.status(200);
+        res.send(await connector.then(async () => {
+            return findAllCases();
+        }));
+    } else {
+        res.status(403);
+        res.send({ "message": "Invalid Auth Token" });
+    }
 })
 
 app.get('/numbers-by-district', async function (req, res) {
-    let numbers = await connector.then(async () => {
-        return findNumbersByDistrict();
-    });
-    res.status(200);
-    res.send(numbers[0]);
+    if (authenticate(req.headers["auth_token"])) {
+        let numbers = await connector.then(async () => {
+            return findNumbersByDistrict();
+        });
+        res.status(200);
+        res.send(numbers[0]);
+    } else {
+        res.status(403);
+        res.send({ "message": "Invalid Auth Token" });
+    }
 })
 
 app.get('/cases-by-district', async function (req, res) {
-    if (req.query["_id"]) {
-        res.status(200);
-        res.send(await connector.then(async () => {
-            return findCasesByDistrict(req.query["_id"]);
-        }));
+    if (authenticate(req.headers["auth_token"])) {
+        if (req.query["_id"]) {
+            res.status(200);
+            res.send(await connector.then(async () => {
+                return findCasesByDistrict(req.query["_id"]);
+            }));
+        } else {
+            res.status(400);
+            res.send({ "message": "District ID is required" });
+        }
     } else {
-        res.status(400);
-        res.send({ "message": "District ID is required" });
+        res.status(403);
+        res.send({ "message": "Invalid Auth Token" });
     }
 })
 
 app.get('/case-by-id', async function (req, res) {
-    if (req.query["_id"]) {
-        let singleCase = await connector.then(async () => {
-            return findCaseByID(req.query["_id"]);
-        });
-        res.status(200);
-        res.send(singleCase[0]);
+    if (authenticate(req.headers["auth_token"])) {
+        if (req.query["_id"]) {
+            let singleCase = await connector.then(async () => {
+                return findCaseByID(req.query["_id"]);
+            });
+            res.status(200);
+            res.send(singleCase[0]);
+        } else {
+            res.status(400);
+            res.send({ "message": "Case ID is required" });
+        }
     } else {
-        res.status(400);
-        res.send({ "message": "Case ID is required" });
+        res.status(403);
+        res.send({ "message": "Invalid Auth Token" });
     }
 })
 
