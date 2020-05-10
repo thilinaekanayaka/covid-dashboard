@@ -53,14 +53,14 @@ async function createCase(newCase, res) {
     newCase["created"] = Date.now();
     return new Cases(newCase).save(function (err) {
         if (err) {
-            res.status(505);
+            res.status(400);
             res.send({
                 "message": "There was an error",
                 "errors": err["errors"]
             });
         } else {
             res.status(201);
-            res.send({"message": "Case created"});
+            res.send({ "message": "Case created" });
         }
     });
 }
@@ -68,16 +68,16 @@ async function createCase(newCase, res) {
 async function editCase(caseData, res) {
     const casaeID = caseData["_id"];
     delete caseData["_id"];
-    return await Cases.findByIdAndUpdate({ '_id': casaeID }, caseData, function(err) {
+    return await Cases.findByIdAndUpdate({ '_id': casaeID }, caseData, function (err) {
         if (err) {
-            res.status(505);
+            res.status(400);
             res.send({
                 "message": "There was an error",
                 "errors": err["errors"]
             });
         } else {
             res.status(200);
-            res.send({"message": "Case edited"});
+            res.send({ "message": "Case edited" });
         }
     });
 }
@@ -125,18 +125,23 @@ app.post('/edit-case', async function (req, res) {
 })
 
 app.get('/remove-case', async function (req, res) {
-    await connector.then(async () => {
-        return removeCase(req.query["_id"]);
-    });
-    res.send({ "message": "Case removed" });
+    if (req.query["_id"]) {
+        await connector.then(async () => {
+            return removeCase(req.query["_id"]);
+        });
+        res.status(200);
+        res.send({ "message": "Case removed" });
+    } else {
+        res.status(400);
+        res.send({ "message": "Case ID is required" });
+    }
 })
 
 app.get('/all-cases', async function (req, res) {
-    let cases = await connector.then(async () => {
-        return findAllCases();
-    });
     res.status(200);
-    res.send(cases);
+    res.send(await connector.then(async () => {
+        return findAllCases();
+    }));
 })
 
 app.get('/numbers-by-district', async function (req, res) {
@@ -148,19 +153,28 @@ app.get('/numbers-by-district', async function (req, res) {
 })
 
 app.get('/cases-by-district', async function (req, res) {
-    let cases = await connector.then(async () => {
-        return findCasesByDistrict(req.query["_id"]);
-    });
-    res.status(200);
-    res.send(cases);
+    if (req.query["_id"]) {
+        res.status(200);
+        res.send(await connector.then(async () => {
+            return findCasesByDistrict(req.query["_id"]);
+        }));
+    } else {
+        res.status(400);
+        res.send({ "message": "District ID is required" });
+    }
 })
 
 app.get('/case-by-id', async function (req, res) {
-    let singleCase = await connector.then(async () => {
-        return findCaseByID(req.query["_id"]);
-    });
-    res.status(200);
-    res.send(singleCase[0]);
+    if (req.query["_id"]) {
+        let singleCase = await connector.then(async () => {
+            return findCaseByID(req.query["_id"]);
+        });
+        res.status(200);
+        res.send(singleCase[0]);
+    } else {
+        res.status(400);
+        res.send({ "message": "Case ID is required" });
+    }
 })
 
 //--- End of API implementations ---/
