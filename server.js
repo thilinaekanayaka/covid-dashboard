@@ -47,16 +47,39 @@ app.post('/', function (req, res) {
 
 const connectionString = 'mongodb+srv://root:1234@cluster0-9qy9w.mongodb.net/dashboard?retryWrites=true&w=majority';
 const Cases = mongoose.model('cases', caseSchema, 'cases');
+const connector = mongoose.connect(connectionString, { useUnifiedTopology: true, useNewUrlParser: true, useFindAndModify: false });
 
-async function createCase(newCase) {
+async function createCase(newCase, res) {
     newCase["created"] = Date.now();
-    return new Cases(newCase).save();
+    return new Cases(newCase).save(function (err) {
+        if (err) {
+            res.status(505);
+            res.send({
+                "message": "There was an error",
+                "errors": err["errors"]
+            });
+        } else {
+            res.status(201);
+            res.send({"message": "Case created"});
+        }
+    });
 }
 
-async function editCase(caseData) {
+async function editCase(caseData, res) {
     const casaeID = caseData["_id"];
     delete caseData["_id"];
-    return await Cases.findByIdAndUpdate({ '_id': casaeID }, caseData);
+    return await Cases.findByIdAndUpdate({ '_id': casaeID }, caseData, function(err) {
+        if (err) {
+            res.status(505);
+            res.send({
+                "message": "There was an error",
+                "errors": err["errors"]
+            });
+        } else {
+            res.status(200);
+            res.send({"message": "Case edited"});
+        }
+    });
 }
 
 async function removeCase(id) {
@@ -69,9 +92,11 @@ async function findAllCases() {
 
 async function findNumbersByDistrict() {
     return await Cases.aggregate([
-        { $facet: {
-            cases: [{ $group: { _id: "$location.district", count: { "$sum": 1 } } }]
-        }}
+        {
+            $facet: {
+                cases: [{ $group: { _id: "$location.district", count: { "$sum": 1 } } }]
+            }
+        }
     ]);
 }
 
@@ -87,33 +112,30 @@ async function findCaseByID(id) {
 
 //--- API implementations ---/
 
-const connector = mongoose.connect(connectionString, { useUnifiedTopology: true, useNewUrlParser: true, useFindAndModify: false });
-
 app.post('/create-case', async function (req, res) {
     await connector.then(async () => {
-        createCase(req.body);
+        createCase(req.body, res);
     });
-    res.send({"message": "Case created"});
 })
 
 app.post('/edit-case', async function (req, res) {
     await connector.then(async () => {
-        editCase(req.body);
+        editCase(req.body, res);
     });
-    res.send({"message": "Case edited"});
 })
 
 app.get('/remove-case', async function (req, res) {
     await connector.then(async () => {
         return removeCase(req.query["_id"]);
     });
-    res.send({"message": "Case removed"});
+    res.send({ "message": "Case removed" });
 })
 
 app.get('/all-cases', async function (req, res) {
     let cases = await connector.then(async () => {
         return findAllCases();
     });
+    res.status(200);
     res.send(cases);
 })
 
@@ -121,6 +143,7 @@ app.get('/numbers-by-district', async function (req, res) {
     let numbers = await connector.then(async () => {
         return findNumbersByDistrict();
     });
+    res.status(200);
     res.send(numbers[0]);
 })
 
@@ -128,6 +151,7 @@ app.get('/cases-by-district', async function (req, res) {
     let cases = await connector.then(async () => {
         return findCasesByDistrict(req.query["_id"]);
     });
+    res.status(200);
     res.send(cases);
 })
 
@@ -135,6 +159,7 @@ app.get('/case-by-id', async function (req, res) {
     let singleCase = await connector.then(async () => {
         return findCaseByID(req.query["_id"]);
     });
+    res.status(200);
     res.send(singleCase[0]);
 })
 
