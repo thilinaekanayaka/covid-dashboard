@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon server.js"
   },
-  "author": "",
+  "author": "Thilina Ekanayaka",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.19.0",
